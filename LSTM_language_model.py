@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 from collections import Counter
 
-import rnn
+from rnns import lstm
 
 plt.rcParams["figure.figsize"] = [10, 5]
 
@@ -18,15 +18,15 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # %%:
 try:
-    open("nietzsche.txt", 'r')
+    open("datasets/nietzsche.txt", 'r')
 except FileNotFoundError:
-    with open("nietzsche.txt", "wb+") as f:
+    with open("datasets/nietzsche.txt", "wb+") as f:
         response = requests.get('https://s3.amazonaws.com/text-datasets/nietzsche.txt')
         f.write(response.content)
         f.close()
 
 # %%:
-with open("nietzsche.txt", 'r') as f:
+with open("datasets/nietzsche.txt", 'r') as f:
     data = f.read().lower()
     data = data.replace("\n", " ")
     data = data[:10000]
@@ -67,20 +67,19 @@ print(f"Epochs: {NO_OF_EPOCHS}\nSequence length: {seq_len}")
 
 # %%:
 if __name__ == "__main__":
-    model = rnn.SimpleRNN(
+    model = lstm.LSTM(
         device=DEVICE,
         epochs=NO_OF_EPOCHS,
-        sequence_len=seq_len,
+        sequence_len=20,
         alphabet_len=len(alphabet),
-        hidden_size=100,
+        hidden_size=32,
         lr=1e-1,
-        batch_size=1#math.ceil(len(data)/seq_len)
     )
     try:
-        model.fit(sample_sentence, num_samples=200, print_loss=100)
+        model.fit(sample_sentence, num_samples=len(sample_sentence)-1, print_loss=100)
     except KeyboardInterrupt:
-        print("Interrupted, saving parameters..")
-        model.save("model_params")
+        print("Interrupted")#, saving parameters..")
+        #model.save("model_params")
 
 plt.plot(model.losses)
 plt.legend(["Training loss"])

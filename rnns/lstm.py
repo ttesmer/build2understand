@@ -19,7 +19,7 @@ class LSTM(object):
                  batch_size=1):
         super().__init__()
         """
-        Long-Short Term Memory Recurrent Neural Network
+        Long Short-Term Memory Recurrent Neural Network
         """
         self.device = device
         self.epochs = epochs
@@ -29,21 +29,40 @@ class LSTM(object):
         self.batch_size = batch_size
         self.eta = lr
 
+        # Xavier weight initialization
+        # (https://cs230.stanford.edu/section/4/)
+        # don't know if this is right..
+
         # forget w&b
-        self.Wf = torch.randn(hidden_size, alphabet_len+hidden_size, device=device) * 1e-2
-        self.bf = torch.randn(hidden_size, 1, device=device)
+        self.Wf = torch.normal(
+                torch.zeros(hidden_size, alphabet_len+hidden_size, device=device),
+                std=1/(alphabet_len+hidden_size)
+                )
+        self.bf = torch.zeros(hidden_size, 1, device=device)
         # input w&b
-        self.Wi = torch.randn(hidden_size, alphabet_len+hidden_size, device=device) * 1e-2
-        self.bi = torch.randn(hidden_size, 1, device=device)
+        self.Wi = torch.normal(
+                torch.zeros(hidden_size, alphabet_len+hidden_size, device=device),
+                std=1/(alphabet_len+hidden_size)
+                )
+        self.bi = torch.zeros(hidden_size, 1, device=device)
         # activation w&b
-        self.Wc = torch.randn(hidden_size, alphabet_len+hidden_size, device=device) * 1e-2
-        self.bc = torch.randn(hidden_size, 1, device=device)
+        self.Wc = torch.normal(
+                torch.zeros(hidden_size, alphabet_len+hidden_size, device=device),
+                std=1/(alphabet_len+hidden_size)
+                )
+        self.bc = torch.zeros(hidden_size, 1, device=device)
         # output w&b
-        self.Wo = torch.randn(hidden_size, alphabet_len+hidden_size, device=device) * 1e-2
-        self.bo = torch.randn(hidden_size, 1, device=device)
+        self.Wo = torch.normal(
+                torch.zeros(hidden_size, alphabet_len+hidden_size, device=device),
+                std=1/(alphabet_len+hidden_size)
+                )
+        self.bo = torch.zeros(hidden_size, 1, device=device)
         # y_hat w&b
-        self.Wy = torch.randn(alphabet_len, hidden_size, device=device) * 1e-2
-        self.by = torch.randn(alphabet_len, 1, device=device)
+        self.Wy = torch.normal(
+                torch.zeros(alphabet_len, hidden_size, device=device),
+                std=1/hidden_size
+                )
+        self.by = torch.zeros(alphabet_len, 1, device=device)
 
         # gradients
         self.Wf.grad = torch.zeros_like(self.Wf)
@@ -183,12 +202,16 @@ class LSTM(object):
             dh = matmul(self.Wy.t(), dy) + dh_next
             dC = ((1 - tanhC_t.square()) * dh * o) + dC_next
             dC_next = f * dC
-            dC_hat = (1 - tanh(C_hat).square()) * (i * dC)
+            dC_hat = (1 - (C_hat).square()) * (i * dC)
 
             # all are hidden_size x 1
             do = sigmoid_prime(o) * (tanhC_t * dh)
             di = sigmoid_prime(i) * (C_hat * dC)
             df = sigmoid_prime(f) * (C_last * dC)
+            print("mean f value:", f.mean().item())
+            print("mean i value:", i.mean().item())
+            print("mean o value:", o.mean().item())
+            print("mean C value:", C.mean().item())
 
             # print(df.sum().item(), di.sum().item(), do.sum().item())
             # print("\nf:", f[0][0].item())
@@ -202,10 +225,14 @@ class LSTM(object):
             # print("dh_next: ", dh_next[0][0].item())
             # print()
 
-            dh_next = matmul(self.Wf.t(), df) + matmul(self.Wi.t(), di) + matmul(self.Wc.t(), dC) + matmul(self.Wo.t(), do)
-            print(matmul(self.Wf.t(), df).sum().item(), matmul(self.Wi.t(), di).sum().item(), matmul(self.Wc.t(), dC).sum().item(), matmul(self.Wo.t(), do).sum().item())
-            dh_next = dh_next[:self.hidden_size]
-            # print(dh_next)
+            dXf = matmul(self.Wf.t(), df)
+            dXi = matmul(self.Wi.t(), di)
+            dXc = matmul(self.Wc.t(), dC)
+            dXo = matmul(self.Wo.t(), do)
+
+            dX = dXf + dXi + dXc + dXo
+
+            dh_next = dX[:self.hidden_size]
 
             # gradients
             dWy = matmul(dy, h.t())
@@ -230,17 +257,19 @@ class LSTM(object):
             self.bi.grad += dbi
             self.Wf.grad += dWf
             self.bf.grad += dbf
-        # prevent exploding gradient
-        self.Wf.grad.clip_(-5, 5)
-        self.bf.grad.clip_(-5, 5)
-        self.Wi.grad.clip_(-5, 5)
-        self.bi.grad.clip_(-5, 5)
-        self.Wc.grad.clip_(-5, 5)
-        self.bc.grad.clip_(-5, 5)
-        self.Wo.grad.clip_(-5, 5)
-        self.bo.grad.clip_(-5, 5)
-        self.Wy.grad.clip_(-5, 5)
-        self.by.grad.clip_(-5, 5)
+
+        # # prevent exploding gradient
+        # # per time step or after sequence backprop?
+        # self.Wf.grad.clip_(-5, 5)
+        # self.bf.grad.clip_(-5, 5)
+        # self.Wi.grad.clip_(-5, 5)
+        # self.bi.grad.clip_(-5, 5)
+        # self.Wc.grad.clip_(-5, 5)
+        # self.bc.grad.clip_(-5, 5)
+        # self.Wo.grad.clip_(-5, 5)
+        # self.bo.grad.clip_(-5, 5)
+        # self.Wy.grad.clip_(-5, 5)
+        # self.by.grad.clip_(-5, 5)
     
     def update_params(self, epoch):
         print(self.Wf.grad)

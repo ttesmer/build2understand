@@ -14,3 +14,6 @@ See [binary_sequence.py](binary_sequence.py) for an even simpler example (used f
 
 See [language_model_LSTM.py](language_model_LSTM.py) and [binseq_LSTM.py](binseq_LSTM.py) for LSTM equivalent.
 The LSTM doesn't function well yet. The language model seems to skew toward learning the endings more (e.g. "out originate out of its opposite?out of its opposite?" as a result, instead of "how could anything"). Will fix soon. At least the loss is being minimized..
+
+### Literature
+- [This paper](https://arxiv.org/abs/1503.04069) might shed some light on the troubles I'm having.
