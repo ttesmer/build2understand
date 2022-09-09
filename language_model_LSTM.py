@@ -73,11 +73,11 @@ if __name__ == "__main__":
         epochs=NO_OF_EPOCHS,
         sequence_len=seq_len,
         alphabet_len=len(alphabet),
-        hidden_size=100,
+        hidden_size=128,
         lr=1e-1,
     )
     try:
-        model.fit(sample_sentence, num_samples=200, print_loss=100)
+        model.fit(sample_sentence, num_samples=len(sample_sentence)-1, print_loss=100)
     except KeyboardInterrupt:
         print("Interrupted")#, saving parameters..")
         #model.save("model_params")

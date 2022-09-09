@@ -16,7 +16,7 @@ class LSTM(object):
                  hidden_size: int,
                  alphabet_len: int,
                  lr: float,
-                 bctch_size=1):
+                 batch_size=1):
         super().__init__()
         """
         Long-Short Term Memory Recurrent Neural Network
@@ -26,7 +26,7 @@ class LSTM(object):
         self.seq_len = sequence_len
         self.hidden_size = hidden_size
         self.alphabet_len = alphabet_len
-        self.bctch_size = bctch_size
+        self.batch_size = batch_size
         self.eta = lr
 
         # forget w&b
@@ -135,62 +135,88 @@ class LSTM(object):
             self.update_params(epoch)
 
     def forward(self, x_t, h_last, C_last):
+        h_last_x = cat((h_last, x_t))
         # forget gate
-        f_t = sigmoid(self.Wf @ cat((h_last, x_t)) + self.bf)
+        f_t = sigmoid((self.Wf @ h_last_x) + self.bf)
         # input gate
-        i_t = sigmoid(self.Wi @ cat((h_last, x_t)) + self.bi)
+        i_t = sigmoid((self.Wi @ h_last_x) + self.bi)
 
         # Cell state
-        C_hat = tanh(self.Wc @ cat((h_last, x_t)) + self.bc)
+        C_hat = tanh((self.Wc @ h_last_x) + self.bc)
         C_t = f_t * C_last + i_t * C_hat
 
         # output gate
-        o_t = sigmoid(self.Wo @ cat((h_last, x_t)) + self.bo)
+        o_t = sigmoid((self.Wo @ h_last_x) + self.bo)
 
         # hidden state
         h_t = o_t * tanh(C_t)
 
-        y_hat = torch.softmax(self.Wy @ h_t + self.by, dim=0)
+        y_hat = torch.softmax((self.Wy @ h_t) + self.by, dim=0)
         return y_hat, h_t, C_t, C_hat, f_t, i_t, o_t
 
     def backward(self, X, Y, preds):
+        hs = self.hs
+        Cs = self.Cs
+        dh_next = torch.zeros_like(hs[0])
+        dC_next = torch.zeros_like(Cs[0])
         for t in reversed(range(self.seq_len)):
             y_hat = preds[t]
             y = Y[t]
             x = X[t]
-            h = self.hs[t]
-            h_last = self.hs[t-1]
-            C = self.Cs[t]
-            C_last = self.Cs[t-1]
+            h = hs[t]
+            h_last = hs[t-1]
+            C = Cs[t]
+            C_last = Cs[t-1]
             C_hat = self.C_hats[t]
             f = self.fs[t]
             i = self.is_[t]
             o = self.os[t]
             tanhC_t = tanh(C)
+            # (only calculate h_last_x once)
+            h_last_x = cat((h_last, x))
+            h_last_xT = cat((h_last, x)).t()
 
             # reverse mode differentiation
             # TODO: write an autograd
             dy = y_hat - y
-            dh = matmul(self.Wy.t(), dy)
-            dC = o * (1 - tanhC_t.square())
-            dC_hat = (1 - C_hat.square()) * (i * dC)
+            # hidden_size x 1
+            dh = matmul(self.Wy.t(), dy) + dh_next
+            dC = ((1 - tanhC_t.square()) * dh * o) + dC_next
+            dC_next = f * dC
+            dC_hat = (1 - tanh(C_hat).square()) * (i * dC)
 
+            # all are hidden_size x 1
             do = sigmoid_prime(o) * (tanhC_t * dh)
             di = sigmoid_prime(i) * (C_hat * dC)
             df = sigmoid_prime(f) * (C_last * dC)
 
+            # print(df.sum().item(), di.sum().item(), do.sum().item())
+            # print("\nf:", f[0][0].item())
+            # print("dC: ", dC[0][0].item())
+            # print("Components of dC:")
+            # print("o: ", o[0][0].item())
+            # print("tanhC_t: ", tanhC_t[0][0].item())
+            # print("dh: ", dh[0][0].item())
+            # print("Components of dh:")
+            # print("Wy: ", self.Wy[0][0].item())
+            # print("dh_next: ", dh_next[0][0].item())
+            # print()
+
+            dh_next = matmul(self.Wf.t(), df) + matmul(self.Wi.t(), di) + matmul(self.Wc.t(), dC) + matmul(self.Wo.t(), do)
+            print(matmul(self.Wf.t(), df).sum().item(), matmul(self.Wi.t(), di).sum().item(), matmul(self.Wc.t(), dC).sum().item(), matmul(self.Wo.t(), do).sum().item())
+            dh_next = dh_next[:self.hidden_size]
+            # print(dh_next)
+
             # gradients
-            # (only calculate h_last_x once)
-            h_last_x = cat((h_last, x)).t()
             dWy = matmul(dy, h.t())
             dby = dy
-            dWo = matmul(do, h_last_x)
+            dWo = matmul(do, h_last_xT)
             dbo = do
-            dWc = matmul(dC_hat, h_last_x)
+            dWc = matmul(dC_hat, h_last_xT)
             dbc = dC_hat
-            dWi = matmul(di, h_last_x)
+            dWi = matmul(di, h_last_xT)
             dbi = di
-            dWf = matmul(df, h_last_x)
+            dWf = matmul(df, h_last_xT)
             dbf = df
 
             # updates
@@ -204,8 +230,20 @@ class LSTM(object):
             self.bi.grad += dbi
             self.Wf.grad += dWf
             self.bf.grad += dbf
+        # prevent exploding gradient
+        self.Wf.grad.clip_(-5, 5)
+        self.bf.grad.clip_(-5, 5)
+        self.Wi.grad.clip_(-5, 5)
+        self.bi.grad.clip_(-5, 5)
+        self.Wc.grad.clip_(-5, 5)
+        self.bc.grad.clip_(-5, 5)
+        self.Wo.grad.clip_(-5, 5)
+        self.bo.grad.clip_(-5, 5)
+        self.Wy.grad.clip_(-5, 5)
+        self.by.grad.clip_(-5, 5)
     
     def update_params(self, epoch):
+        print(self.Wf.grad)
         self.Wf += -self.eta * self.Wf.grad
         self.bf += -self.eta * self.bf.grad
         self.Wi += -self.eta * self.Wi.grad
@@ -254,7 +292,7 @@ class LSTM(object):
                num_samples: int):
         x = torch.zeros(self.alphabet_len, 1, device=self.device)
         x[seed_idx] = 1.0
-        idxs = []
+        idxs = [seed_idx]
         for t in range(num_samples):
             probs, h, C, *_ = self.forward(x, h, C)
             sampled_index = probs.ravel().multinomial(num_samples=1)
