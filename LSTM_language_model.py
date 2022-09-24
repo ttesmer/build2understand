@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
-
+# %load_ext autoreload
+# %autoreload 2
 # %%:
 import torch
 import requests
@@ -10,9 +11,9 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 from collections import Counter
 
-from rnns import lstm
+from rnns import LSTM
 
-plt.rcParams["figure.figsize"] = [10, 5]
+plt.rcParams["figure.figsize"] = [10, 20]
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -46,7 +47,7 @@ next_chars = []
 for i in range(0, len(data) - maxlen, step):
     sentences.append(data[i : i + maxlen])
     next_chars.append(data[i + maxlen])
- 
+
 print(f"No. of sentences: {len(sentences)}")
 
 # %%:
@@ -60,27 +61,44 @@ alphabet = sorted(list(set(sample_sentence)))
 print("Truth:")
 print(sample_sentence)
 
-seq_len = 48
+seq_len = 40
 NO_OF_EPOCHS = 4000
 
 print(f"Epochs: {NO_OF_EPOCHS}\nSequence length: {seq_len}")
 
 # %%:
 if __name__ == "__main__":
-    model = lstm.LSTM(
-        device=DEVICE,
-        epochs=NO_OF_EPOCHS,
-        sequence_len=20,
-        alphabet_len=len(alphabet),
-        hidden_size=32,
-        lr=1e-1,
-    )
-    try:
-        model.fit(sample_sentence, num_samples=len(sample_sentence)-1, print_loss=100)
-    except KeyboardInterrupt:
-        print("Interrupted")#, saving parameters..")
-        #model.save("model_params")
+    full_corpus = True
 
-plt.plot(model.losses)
-plt.legend(["Training loss"])
-plt.show()
+    if full_corpus:
+        print("Runnin on full corpus..")
+        print("Using random seed 25")
+        torch.manual_seed(25)
+        model = LSTM(
+            device=DEVICE,
+            epochs=NO_OF_EPOCHS,
+            sequence_len=seq_len,
+            alphabet_len=len(chars),
+            hidden_size=128,
+            lr=1e-2,
+            beta=0.9,
+            batch_size=128
+        )
+        model.fit(data, num_samples=len(sample_sentence)-1+200, print_loss=100)
+    else:
+        print("Only doing one sentence..")
+        model = LSTM(
+            device=DEVICE,
+            epochs=NO_OF_EPOCHS,
+            sequence_len=48,
+            alphabet_len=len(alphabet),
+            hidden_size=128,
+            lr=1e-2,
+            beta=0.90,
+            batch_size=8
+        )
+        model.fit(sample_sentence, num_samples=len(sample_sentence)-1, print_loss=100)
+
+# plt.plot(model.losses)
+# plt.legend(["Training loss"])
+# plt.show()

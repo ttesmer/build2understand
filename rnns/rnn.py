@@ -2,8 +2,8 @@ import torch
 from torch import matmul
 from math import sqrt
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import imshow
+# import matplotlib.pyplot as plt
+# from matplotlib.pyplot import imshow
 
 class SimpleRNN(object):
     def __init__(self,
@@ -74,7 +74,6 @@ class SimpleRNN(object):
             # Get next part of sequence & its labels
             inputs = [char2idx[char] for char in data[pointer:pointer+self.seq_len]]
             targets = [char2idx[char] for char in data[pointer+1:pointer+self.seq_len+1]]
-            print(f"inputs: {data[pointer:pointer+self.seq_len]}")
             assert len(inputs) == len(targets), f"len inputs: {len(inputs)} doesn't match len of targets: {len(targets)}"
             assert len(inputs) == self.seq_len, f"len inputs: {len(inputs)} doesn't match seq_len: {self.seq_len}"
 

@@ -6,7 +6,7 @@ import torch
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 
-from rnns import rnn
+from rnns import SimpleRNN
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -18,7 +18,7 @@ print(f"Truth:\n{[*map(int,[*ss])]}")
 seq_len=10
 NO_OF_EPOCHS = 5
 
-model = rnn.SimpleRNN(
+model = SimpleRNN(
     device=DEVICE,
     epochs=NO_OF_EPOCHS,
     sequence_len=seq_len,

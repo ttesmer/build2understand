@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 from collections import Counter
 
-from rnns import rnn
+from rnns import SimpleRNN
 
 plt.rcParams["figure.figsize"] = [10, 5]
 
@@ -67,7 +67,7 @@ print(f"Epochs: {NO_OF_EPOCHS}\nSequence length: {seq_len}")
 
 # %%:
 if __name__ == "__main__":
-    model = rnn.SimpleRNN(
+    model = SimpleRNN(
         device=DEVICE,
         epochs=NO_OF_EPOCHS,
         sequence_len=seq_len,
