@@ -43,4 +43,4 @@ for t in range(len(sequence)-1):
     Y[t][char2idx[next_char]] = 1.
 
 print("Using random seed 25")
-model.fit_no_SGD(X, Y, num_iters=NO_OF_EPOCHS, weight_decay=1e-3, print_loss=5)
+model.fit(X, Y, num_iters=NO_OF_EPOCHS, weight_decay=1e-3, print_loss=5)

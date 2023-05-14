@@ -2,8 +2,6 @@ import torch
 from torch import matmul, cat, tanh, sigmoid
 from collections import OrderedDict
 from typing import List, Tuple
-# import matplotlib.pyplot as plt
-# from matplotlib.pyplot import imshow
 torch.manual_seed(25)
 
 def sigmoid_prime(x):
@@ -339,17 +337,6 @@ class LSTM(object):
             self.C_hat[t] = C_hat
 
         y_hat = torch.softmax((self.Wy @ h_t) + self.by, dim=0)
-        # print("h_last_x", h_last_x)
-        # print("f", f_t)
-        # print("i", i_t)
-        # print("o", o_t)
-        # print("C_hat", C_hat)
-        # print("C", tanh(C_t))
-        # print("y_hat", y_hat)
-        # print()
-        # if f_t.sum().item() == f_t.shape[0]:
-        #     exit()
-
         if cache_vars: 
             return y_hat, state, cache
         else:
