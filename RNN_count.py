@@ -11,12 +11,13 @@ from rnns import SimpleRNN
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # %%:
-ss = "1010101010101010101010101010101010101010"
+ss = "01234567890123456789012345678901234567890123456789"
 print(f"Truth:\n{[*map(int,[*ss])]}")
+print(len(set(ss)))
 
 # %%:
 seq_len=10
-NO_OF_EPOCHS = 5
+NO_OF_EPOCHS = 16
 
 model = SimpleRNN(
     device=DEVICE,
@@ -24,9 +25,11 @@ model = SimpleRNN(
     sequence_len=seq_len,
     hidden_size=16,
     lr=1e-1,
-    alphabet_len=2
+    alphabet_len=len(set(ss))
 )
 
 model.fit(ss, num_samples=40)
-plt.plot(model.losses)
-plt.show()
+countToOne = model.predict('0', 1)
+print(countToOne)
+#plt.plot(model.losses)
+#plt.show()
