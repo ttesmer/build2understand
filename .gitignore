@@ -3,3 +3,5 @@ __pycache__/
 datasets/
 autoencoder/MNIST/
 autoencoder/FashionMNIST/
+GAN/MNIST/
+autoencoder/DrinkTheKoolaid.ipynb
