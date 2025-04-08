@@ -28,8 +28,11 @@ model = SimpleRNN(
     alphabet_len=len(set(ss))
 )
 
-model.fit(ss, num_samples=40)
-countToOne = model.predict('0', 1)
-print(countToOne)
+model.fit(ss, num_samples=9)
+count = '0'
+count = model.predict(count, num_samples=9)
+print('Count from zero:')
+for c in count:
+    print('-->', c)
 #plt.plot(model.losses)
 #plt.show()

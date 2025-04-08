@@ -3,5 +3,11 @@ __pycache__/
 datasets/
 autoencoder/MNIST/
 autoencoder/FashionMNIST/
+transformer/weights/
+autoencoder/data
+<<<<<<< Updated upstream
 GAN/MNIST/
 autoencoder/DrinkTheKoolaid.ipynb
+=======
+.*.swp
+>>>>>>> Stashed changes

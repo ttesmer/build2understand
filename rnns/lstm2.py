@@ -2,7 +2,7 @@ import torch
 from torch import matmul, cat, tanh, sigmoid
 from collections import OrderedDict
 from typing import List, Tuple
-torch.manual_seed(25)
+#torch.manual_seed(25)
 
 def sigmoid_prime(x):
     return x*(1-x)
@@ -125,15 +125,16 @@ class LSTM(object):
             self.update_params()
 
             if epoch % print_loss == 0:
+                seed = X[-1]
                 print(f"\nEpoch #{epoch}: {loss}")
-                print('...Generating with seed: "' + ''.join(self.idx2char[idx.item()] for idx in X.argmax(dim=1)) + '"')
+                print('...Generating with seed char: "' + self.idx2char[seed.argmax().item()] + '"')
                 print("#"*4, "Generated text after last char of seed:")
                 for diversity in [0.2, 0.5, 1.0, 1.2]:
                     print(f"..Diversity: {diversity}")
                     samples = self.sample_sequence(
-                            seed=X.argmax(dim=1)[-self.alphabet_len:],
-                            state=state,
-                            num_samples=self.seq_len,
+                            seed=seed,
+                            state=self.hs[-1],
+                            num_samples=5,
                             temperature=diversity)
                     print(''.join(self.idx2char[idx] for idx in samples))
                 print("#"*4)
@@ -224,12 +225,12 @@ class LSTM(object):
                state: Tuple,
                num_samples: int,
                temperature=1.0):
-        idxs = [seed.argmax().item()]
+        idxs = []
         state = (torch.zeros_like(self.hs[-1]), torch.zeros_like(self.C[-1]))
         for t in range(num_samples):
             seed = seed.to(torch.float32)
             probs, state = self.forward(seed, state, cache_vars=False)
-            probs = probs.to(torch.float64)
+            probs = probs.to(torch.float32)
             probs = probs.log() / temperature
             exp_probs = probs.exp()
             probs = exp_probs / exp_probs.sum()

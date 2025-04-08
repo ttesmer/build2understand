@@ -9,15 +9,16 @@ import torch
 from rnns import LSTM
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+DEVICE = 'mps:0'
 
 # %%:
-sequence = "1010101010101010101010101010101010101010"
+sequence = "1010 1010 1010 1010 1010 1010"
 print(f"Truth:\n{sequence}")
 alphabet = sorted(list(set(sequence)))
 
 # %%:
-NO_OF_EPOCHS=20
-HIDDEN_SIZE=16
+NO_OF_EPOCHS=30
+HIDDEN_SIZE=32
 
 model = LSTM(
     device=DEVICE,
@@ -26,8 +27,8 @@ model = LSTM(
     hidden_size=HIDDEN_SIZE,
     sequence_len=len(sequence),
     alphabet_len=len(alphabet),
-    lr=0.1,
-    beta=0.9,    
+    lr=1e-1,
+    beta=0.9,
 )
 
 X = torch.zeros((len(sequence)-1, len(alphabet), 1), device=DEVICE)
@@ -42,5 +43,4 @@ for t in range(len(sequence)-1):
     X[t][char2idx[char]] = 1.
     Y[t][char2idx[next_char]] = 1.
 
-print("Using random seed 25")
 model.fit(X, Y, num_iters=NO_OF_EPOCHS, weight_decay=1e-3, print_loss=5)

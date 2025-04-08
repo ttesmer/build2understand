@@ -29,7 +29,7 @@ except FileNotFoundError:
 with open("datasets/nietzsche.txt", 'r') as f:
     data = f.read().lower()
     data = data.replace("\n", " ")
-    data = data[:10000]
+    #data = data[:10000]
     chars = sorted(list(set(data)))
     print(f"No. of chars: {len(chars)}\nLength of corpus: {len(data)}")
     f.close()
@@ -50,17 +50,17 @@ for i in range(0, len(data) - maxlen, step):
 print(f"No. of sentences: {len(sentences)}")
 
 # %%:
-sample_sentence = "how could anything originate out of its opposite?"
+#sample_sentence = "how could anything originate out of its opposite?"
 #sample_sentence = "hello world hello world hello world hello world"
 #sample_sentence = "abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz"
-alphabet = sorted(list(set(sample_sentence)))
+#alphabet = sorted(list(set(sample_sentence)))
 
 # %%:
 
-print("Truth:")
-print(sample_sentence)
+#print("Truth:")
+#print(sample_sentence)
 
-seq_len = 48
+seq_len = 25
 NO_OF_EPOCHS = 4000
 
 print(f"Epochs: {NO_OF_EPOCHS}\nSequence length: {seq_len}")
@@ -71,13 +71,13 @@ if __name__ == "__main__":
         device=DEVICE,
         epochs=NO_OF_EPOCHS,
         sequence_len=seq_len,
-        alphabet_len=len(alphabet),
-        hidden_size=100,
+        alphabet_len=len(chars),
+        hidden_size=400,
         lr=1e-1,
         batch_size=1#math.ceil(len(data)/seq_len)
     )
     try:
-        model.fit(sample_sentence, num_samples=200, print_loss=100)
+        model.fit(data, num_samples=200, print_loss=100)
     except KeyboardInterrupt:
         print("Interrupted, saving parameters..")
         model.save("model_params")

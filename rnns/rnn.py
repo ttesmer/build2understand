@@ -185,7 +185,7 @@ class SimpleRNN(object):
     def clear_state(self):
         self.hs = {}
 
-    def predict(self, char: str, num_samples):
+    def predict(self, char: str, num_samples=1):
         idx2char = self.idx2char
         char2idx = self.char2idx
         idxs = self.sample(
