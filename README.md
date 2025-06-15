@@ -2,8 +2,8 @@
 Build machine learning algorithms in order to learn how they work and create cool results.
 
 ## Transformers
-- Implemented GPT-2 in PyTorch ([transformer/GPT-2 inference.ipynb](transformer/GPT-2%20inference.ipynb)
-- Notably, I didn't follow the code implementation, but the config file and some blog posts. Because of this, I had to manually assign each weight matrix, transpose some (since OpenAI used a Conv1D instead of matmul in some places, so we have to transpose to get nn.Linear equivalent), and split the attention matrices. This is because I decided to implement each AttentionHead itself, not in one matrix (which is more efficient, but not very readable or good for didactic purposes. The `attn.c_attn.weight` from OpenAI is `768x2304`, which is actually all Q, K, V matrices together for that AttentionBlock: `2304=768*3` (the three are the Q, K, V of the block). So that's actually Q, K, V each `768x768`, but even that's not what we mean mathematically on a high level.. *Those* are the 12 (`12*64=768`) AttentionHeads in dim=1. So, my implementation is the first (that I've seen), that is arguably slower (though not noticeably on my machine), but IMO *much* more didactically useful to read.
+- Implemented GPT-2 in PyTorch ([transformer/GPT-2 inference.ipynb](transformer/GPT-2%20inference.ipynb))
+- Notably, I didn't follow the code implementation, but rather the config file and some blog posts. Because of this, I had to manually assign each weight matrix, transpose some (since OpenAI used a Conv1D instead of matmul in some places, so we have to transpose to get nn.Linear equivalent), and split the attention matrices. This is because I decided to implement each AttentionHead itself, not in one matrix (which is more efficient, but not very readable or good for didactic purposes. The `attn.c_attn.weight` from OpenAI is `768x2304`, which is actually all Q, K, V matrices together for that AttentionBlock: `2304=768*3` (the three are the Q, K, V of the block). So that's actually the Q, K, V. Each with dimensions `768x768`. But even that's not what we mean mathematically on a high level.. *Those* are the 12 (`12*64=768`) AttentionHeads in dim=1. So, my implementation is the first (that I've seen), that is arguably slower (though not noticeably on my machine), but IMO *much* more didactically useful to read. Also much smaller, compared to the Huggingface Transformers [implementation](https://github.com/huggingface/transformers/blob/main/src/transformers/models/gpt2/modeling_gpt2.py) of 1800 lines.
 - The final weight loading is in the function `_load_weights` in the above linked Jupyter notebook.
 - Next, I want to try running a LoRA/fine-tune on GPT-2 and experiment with using it as a dense feature extractor for retrieval in RAG.
 - Then try other, more modern architectures and load those weights again (LLaMa, Qwen, ..)
@@ -16,13 +16,13 @@ Build machine learning algorithms in order to learn how they work and create coo
 - Next, I want to try flow models and diffusion models. Excited about the connection to differential equations. Denoising autoencoders first, maybe. 
 
 ## Generative Adversarial Networks
-- Implemented a basic, dense GAN and trained on MNIST. Generated some nice images. ([GAN/GAN.ipynb](GAN/GAN.ipynb)
+- Implemented a basic, dense GAN and trained on MNIST. Generated some nice images. ([GAN/GAN.ipynb](GAN/GAN.ipynb))
 - Quite interesting architecture concept and training loop.
 
 ## Recurrent Neural Networks
 (this is where I started, but the code I'm least proud/sure of)
-- Implemented pure RNN (see [rnns/rnn.py](rnn.py)) which works okay.
-- Started implementing LSTM BPTT (backpropagation-through-time). See [rnns/lstm.py](lstm.py) for more.
+- Implemented pure RNN (see [rnns/rnn.py](rnns/rnn.py)) which works okay.
+- Started implementing LSTM BPTT (backpropagation-through-time). See [rnns/lstm.py](rnns/lstm.py) for more.
 
 The goal is still to support [this tutorial](https://keras.io/examples/generative/lstm_character_level_text_generation/) without using anything out of PyTorch's torch.nn module (e.g. only use torch for fast, GPU capable tensors). Code is written as if PyTorch were NumPy. No autograd is used.
 
