@@ -1,4 +1,5 @@
 __pycache__/
+.DS_Store
 .ipynb_checkpoints/
 datasets/
 autoencoder/MNIST/
@@ -10,4 +11,7 @@ GAN/MNIST/
 autoencoder/DrinkTheKoolaid.ipynb
 =======
 .*.swp
+*.txt
+*.pdf
 >>>>>>> Stashed changes
+papers/
